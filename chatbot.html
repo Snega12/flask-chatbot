@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ice Cream Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        #chatbox {
+            width: 350px;
+            height: 500px;
+            background-color: #fff;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chatbox-header {
+            background-color: #00bcd4;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+
+        #user_input {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            margin-top: 5px;
+            width: calc(100% - 20px);
+        }
+
+        .bot-message, .user-message {
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        .bot-message {
+            background-color: #f1f1f1;
+            text-align: left;
+        }
+
+        .user-message {
+            background-color: #d1e7dd;
+            text-align: right;
+        }
+
+        #chatbox-footer {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .typing-indicator {
+            font-style: italic;
+            color: #888;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="chatbox">
+        <div id="chatbox-header">
+            Ice Cream Chatbot
+        </div>
+        <div id="messages">
+            <div class="bot-message">Hello! How can I assist you today? Ask about our ice cream flavors, ordering process, or other details.</div>
+        </div>
+        <input type="text" id="user_input" placeholder="Type a message..." autocomplete="off">
+        <div id="chatbox-footer">
+            <div class="typing-indicator" id="typing-indicator">Typing...</div>
+        </div>
+    </div>
+
+    <!-- Include Socket.io Client -->
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        const userInputField = document.getElementById('user_input');
+        const messagesContainer = document.getElementById('messages');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        function appendMessage(message, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
+            messageDiv.innerHTML = message.replace(/\n/g, '<br>'); // Preserve line breaks
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function getBotResponse(userMessage) {
+            typingIndicator.style.display = 'block';
+            socket.emit('message', userMessage);
+        }
+
+        socket.on('response', function(botResponse) {
+            typingIndicator.style.display = 'none';
+            appendMessage(botResponse, 'bot');
+        });
+
+        userInputField.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const userMessage = this.value;
+                if (userMessage.trim() !== '') {
+                    appendMessage(userMessage, 'user');
+                    this.value = '';
+                    getBotResponse(userMessage);
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
